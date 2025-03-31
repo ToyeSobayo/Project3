@@ -66,7 +66,25 @@ signal.signal(signal.SIGINT, sigint_handler)
 # Read login credentials for all the users
 # Read secret data of all the users
 
+# Initialize Database
+credentialsDB = {}
+secretsDB = {}
 
+# Populating credentials db
+with open('passwords.txt', 'r') as credFile:
+    for line in credFile:
+        line = line.strip()
+        if line:
+            user, password = line.split()
+            credentialsDB[user] = password
+
+# Populating secrets db
+with open('secrets.txt', 'r') as secFile:
+    for line in secFile:
+        line = line.strip()
+        if line:
+            user, secret = line.split()
+            secretsDB[user] = secret
 
 
 ### Loop to accept incoming HTTP connections and respond.
