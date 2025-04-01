@@ -61,10 +61,36 @@ def sigint_handler(sig, frame):
 # Register the signal handler
 signal.signal(signal.SIGINT, sigint_handler)
 
+def parseRequest(reqBody):
+
+    if not reqBody:
+        raise ValueError("Empty request body")
+    
+    pairs = reqBody.split('&')
+    formData = {}
+
+    for pair in pairs:
+        if '=' not in pair:
+            raise ValueError("Badly formed request body: missing '=' in pair")
+        
+        key, value = pair.split('=', 1)
+
+        if not key:
+            raise ValueError("Missing request body key")
+        if not value:
+            raise ValueError(f"Missing value for key '{key}'")
+
+        formData[key] = value
+    
+    return formData
+
+
 
 # TODO: put your application logic here!
 # Read login credentials for all the users
 # Read secret data of all the users
+
+
 
 # Initialize Database
 credentialsDB = {}
@@ -96,8 +122,12 @@ while True:
     header_body = req.decode().split('\r\n\r\n')
     headers = header_body[0]
     body = '' if len(header_body) == 1 else header_body[1]
+    
     print_value('headers', headers)
     print_value('entity body', body)
+    formData = parseRequest(body)
+
+    print(formData)
 
     # TODO: Put your application logic here!
     # Parse headers and body and perform various actions
