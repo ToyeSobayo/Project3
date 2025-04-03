@@ -84,10 +84,12 @@ def parseRequest(reqBody):
     
     return formData
 
-def validateUser(formData, user, password):
+def validateUser(user, password):
 
-    
-    print(formData, "Validate user function")
+    if user in credentialsDB and password in credentialsDB[user] == password:
+        return True
+    else:
+        return False
 
 
 # TODO: put your application logic here!
@@ -130,22 +132,16 @@ while True:
     print_value('headers', headers)
     print_value('entity body', body)
 
-    formData = parseRequest(body)
+    try:
+        formData = parseRequest(body)
+        username = formData.get('username')
+        password = formData.get('password')
+    except ValueError as e:
+        print("Error parsing request:", e)
 
-    credentials = body.split('&')
-
-    for credential in credentials:
-        if '=' not in credential:
-            raise ValueError("Badly formed request body: missing '='")
+    if not username or not password:
+        print("Missing username OR password")
         
-
-        # user, password = credential.split('=', 1)
-        print(credential)
-    
-    # print('user:', user, 'password:', password)
-
-
-
 
     # TODO: Put your application logic here!
     # Parse headers and body and perform various actions
@@ -162,7 +158,7 @@ while True:
     # always send the request to the domain name returned by
     # socket.gethostname().
     submit_hostport = "%s:%d" % (hostname, port)
-
+    
     # You need to set the variables:
     # (1) `html_content_to_send` => add the HTML content you'd
     # like to send to the client.
@@ -177,6 +173,12 @@ while True:
     # you'd like to send the client?
     # Right now, we don't send any extra headers.
     headers_to_send = ''
+
+    if validateUser(username, password):
+        secret = secretsDB.get(username, "No secret available :/")
+        html_content_to_send = (success_page % submit_hostport) + secret
+    else:
+        html_content_to_send = bad_creds_page % submit_hostport
 
     # Construct and send the final response
     response  = 'HTTP/1.1 200 OK\r\n'
