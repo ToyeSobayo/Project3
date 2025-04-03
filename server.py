@@ -71,7 +71,7 @@ def parseRequest(reqBody):
 
     for pair in pairs:
         if '=' not in pair:
-            raise ValueError("Badly formed request body: missing '=' in pair")
+            raise ValueError("Badly formed request body: missing '='")
         
         key, value = pair.split('=', 1)
 
@@ -84,6 +84,10 @@ def parseRequest(reqBody):
     
     return formData
 
+def validateUser(formData, user, password):
+
+    
+    print(formData, "Validate user function")
 
 
 # TODO: put your application logic here!
@@ -125,9 +129,23 @@ while True:
     
     print_value('headers', headers)
     print_value('entity body', body)
+
     formData = parseRequest(body)
 
-    print(formData)
+    credentials = body.split('&')
+
+    for credential in credentials:
+        if '=' not in credential:
+            raise ValueError("Badly formed request body: missing '='")
+        
+
+        # user, password = credential.split('=', 1)
+        print(credential)
+    
+    # print('user:', user, 'password:', password)
+
+
+
 
     # TODO: Put your application logic here!
     # Parse headers and body and perform various actions
