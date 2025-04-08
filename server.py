@@ -101,6 +101,7 @@ def validateUser(user, password):
 # Initialize Database
 credentialsDB = {}
 secretsDB = {}
+cookieDB = {}
 
 # Populating credentials db
 with open('passwords.txt', 'r') as credFile:
@@ -138,6 +139,10 @@ while True:
         password = formData.get('password')
     except ValueError as e:
         print("Error parsing request:", e)
+        # Return Error page or login page here
+
+        # Just skip any further processing
+
 
     if not username or not password:
         print("Missing username OR password")
@@ -175,6 +180,14 @@ while True:
     headers_to_send = ''
 
     if validateUser(username, password):
+
+        randVal = random.getrandbits(64)
+
+        token = str(randVal)
+
+        cookieDB[token] = username
+
+        headers_to_send = f"Set-Cookie: token={token}\r\n"
         secret = secretsDB.get(username, "No secret available :/")
         html_content_to_send = (success_page % submit_hostport) + secret
     else:
