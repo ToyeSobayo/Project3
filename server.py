@@ -85,11 +85,7 @@ def parseRequest(reqBody):
     return formData
 
 def validateUser(user, password):
-
-    if user in credentialsDB and password in credentialsDB[user] == password:
-        return True
-    else:
-        return False
+    return user in credentialsDB and credentialsDB[user] == password
 
 
 # TODO: put your application logic here!
@@ -133,19 +129,19 @@ while True:
     print_value('headers', headers)
     print_value('entity body', body)
 
-    try:
-        formData = parseRequest(body)
-        username = formData.get('username')
-        password = formData.get('password')
-    except ValueError as e:
-        print("Error parsing request:", e)
-        # Return Error page or login page here
+    # try:
+    #     formData = parseRequest(body)
+    #     username = formData.get('username')
+    #     password = formData.get('password')
+    # except ValueError as e:
+    #     print("Error parsing request:", e)
+    #     # Return Error page or login page here
 
-        # Just skip any further processing
+    #     # Just skip any further processing
 
 
-    if not username or not password:
-        print("Missing username OR password")
+    # if not username or not password:
+    #     print("Missing username OR password")
         
 
     # TODO: Put your application logic here!
@@ -177,21 +173,53 @@ while True:
     # (2) `headers_to_send` => add any additional headers
     # you'd like to send the client?
     # Right now, we don't send any extra headers.
+
+    cookieHeader = ''
+    
+    for line in headers.splitlines():
+        if line.startswith("Cookie:"):
+            cookieHeader = line
+            break
+
+    html_content_to_send = ''
     headers_to_send = ''
 
-    if validateUser(username, password):
+    if cookieHeader:
+        token = cookieHeader.split("token=")[-1].strip()
 
-        randVal = random.getrandbits(64)
-
-        token = str(randVal)
-
-        cookieDB[token] = username
-
-        headers_to_send = f"Set-Cookie: token={token}\r\n"
-        secret = secretsDB.get(username, "No secret available :/")
-        html_content_to_send = (success_page % submit_hostport) + secret
+        # Valid case, if token exists in our cookieDB, we have a valid cookie
+        if token in cookieDB:
+            username = cookieDB[token]
+            secret = secretsDB.get(username, "No secret available :/")
+            html_content_to_send = (success_page % submit_hostport) + secret
+        else:
+            # Invalid cookie, serve bad credentials case
+            html_content_to_send = bad_creds_page % submit_hostport
+    
     else:
-        html_content_to_send = bad_creds_page % submit_hostport
+        try:
+            formData = parseRequest(body)
+            username = formData.get('username')
+            password = formData.get('password')
+        except ValueError as e:
+            print("Error parsing request:", e)
+            # Return Error page or login page here
+
+            # Just skip any further processing
+
+
+        if not username or not password:
+            html_content_to_send = login_page % submit_hostport
+        elif validateUser(username, password):
+
+            randVal = random.getrandbits(64)
+            token = str(randVal)
+            cookieDB[token] = username
+            headers_to_send = f"Set-Cookie: token={token}\r\n"
+            secret = secretsDB.get(username, "No secret available :/")
+            html_content_to_send = (success_page % submit_hostport) + secret
+        else:
+            html_content_to_send = bad_creds_page % submit_hostport
 
     # Construct and send the final response
     response  = 'HTTP/1.1 200 OK\r\n'
