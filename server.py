@@ -92,6 +92,13 @@ def validateUser(user, password):
 # Read login credentials for all the users
 # Read secret data of all the users
 
+#extract the token from a complex cookie header it supports multiple cookies
+def getCookieToken(cookieHeader):
+    cookies = cookieHeader.split(';')
+    for cookie in cookies:
+        if 'token=' in cookie:
+            return cookie.strip().split('token=')[-1]
+    return None
 
 
 # Initialize Database
@@ -174,6 +181,25 @@ while True:
     # you'd like to send the client?
     # Right now, we don't send any extra headers.
 
+    
+
+    html_content_to_send = ''
+    headers_to_send = ''
+    #attempting case E
+    try:
+        formData = parseRequest(body)
+        if formData.get("action") == "logout":
+            headers_to_send = "Set-Cookie: token=; expires=Thu, 01 Jan 1970 00:00:00 GMT\r\n"
+            html_content_to_send = logout_page % submit_hostport
+            response  = 'HTTP/1.1 200 OK\r\n' + headers_to_send
+            response += 'Content-Type: text/html\r\n\r\n' + html_content_to_send
+            client.send(response.encode())
+            client.close()
+            print("Logout completed!")
+            continue
+    except:
+        pass
+
     cookieHeader = ''
     
     for line in headers.splitlines():
@@ -181,11 +207,9 @@ while True:
             cookieHeader = line
             break
 
-    html_content_to_send = ''
-    headers_to_send = ''
-
     if cookieHeader:
-        token = cookieHeader.split("token=")[-1].strip()
+        token = getCookieToken(cookieHeader)
+        #token = cookieHeader.split("token=")[-1].strip()
 
         # Valid case, if token exists in our cookieDB, we have a valid cookie
         if token in cookieDB:
@@ -206,7 +230,8 @@ while True:
             # Return Error page or login page here
 
             # Just skip any further processing
-
+            html_content_to_send = login_page % submit_hostport
+        else:
 
         if not username or not password:
             html_content_to_send = login_page % submit_hostport
@@ -220,6 +245,9 @@ while True:
             html_content_to_send = (success_page % submit_hostport) + secret
         else:
             html_content_to_send = bad_creds_page % submit_hostport
+    # Default to login page
+    if not html_content_to_send:
+        html_content_to_send = login_page % submit_hostport
 
     # Construct and send the final response
     response  = 'HTTP/1.1 200 OK\r\n'
