@@ -231,8 +231,10 @@ while True:
             # Just skip any further processing
             html_content_to_send = login_page % submit_hostport
         else:
-            if not username or not password:
+            if username is None and password is None:
                 html_content_to_send = login_page % submit_hostport
+            elif (username is None) != (password is None):
+                html_content_to_send = bad_creds_page % submit_hostport
             elif validateUser(username, password):
                 randVal = random.getrandbits(64)
                 token = str(randVal)
