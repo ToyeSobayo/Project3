@@ -165,7 +165,9 @@ while True:
     # By default, as set up below, POSTing the form will
     # always send the request to the domain name returned by
     # socket.gethostname().
-    submit_hostport = "%s:%d" % (hostname, port)
+    # submit_hostport = "%s:%d" % (hostname, port)
+    
+    submit_hostport = "10.74.178.48"
     
     # You need to set the variables:
     # (1) `html_content_to_send` => add the HTML content you'd
